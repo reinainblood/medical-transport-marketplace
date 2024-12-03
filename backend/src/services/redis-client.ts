@@ -6,10 +6,9 @@ class RedisClient {
   private subscriber: Redis;
 
   constructor() {
-    this.client = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-    });
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    this.client = new Redis(redisUrl);
+    this.subscriber = this.client.duplicate();
 
     this.subscriber = this.client.duplicate();
 

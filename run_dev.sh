@@ -1,4 +1,3 @@
-// run_dev.sh
 #!/bin/bash
 
 # Check if Redis is running
@@ -40,3 +39,4 @@ trap cleanup SIGINT SIGTERM
 
 # Keep script running
 wait
+
