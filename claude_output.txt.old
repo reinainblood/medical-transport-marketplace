@@ -1,0 +1,596 @@
+// frontend/package.json
+{
+  "name": "medical-transport-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "0.263.1",
+    "recharts": "^2.10.3",
+    "@radix-ui/react-slot": "^1.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "vite": "^5.0.10"
+  }
+}
+
+// frontend/vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
+
+// frontend/tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+        },
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      }
+    },
+  },
+  plugins: [],
+}
+
+// frontend/postcss.config.js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+// frontend/index.html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medical Transport Marketplace</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+// frontend/src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-gradient: linear-gradient(to right bottom, #0ea5e9, #3b82f6);
+  --card-gradient: linear-gradient(to right bottom, #1e293b, #0f172a);
+}
+
+body {
+  @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white;
+  min-height: 100vh;
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.gradient-text {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--primary-gradient);
+  padding: 1px;
+  border-radius: 0.5rem;
+}
+
+.gradient-border > * {
+  background: var(--card-gradient);
+  border-radius: 0.5rem;
+}
+// frontend/src/main.jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+
+// frontend/src/App.jsx
+import React from 'react'
+import TransportMarketplace from './components/TransportMarketplace'
+
+function App() {
+  return (
+    <div>
+      <TransportMarketplace />
+    </div>
+  )
+}
+
+export default App
+
+// frontend/src/components/ui/card.jsx
+import React from 'react';
+
+export function Card({ className = '', ...props }) {
+  return (
+    <div
+      className={`glass-card rounded-xl transition-all duration-300 ${className}`}
+      {...props}
+    />
+  );
+}
+
+export function CardHeader({ className = '', ...props }) {
+  return <div className={`p-6 ${className}`} {...props} />;
+}
+
+export function CardTitle({ className = '', ...props }) {
+  return <h3 className={`text-lg font-semibold leading-none tracking-tight ${className}`} {...props} />;
+}
+
+export function CardContent({ className = '', ...props }) {
+  return <div className={`p-6 pt-0 ${className}`} {...props} />;
+}
+
+// frontend/src/components/MetricCard.jsx
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+
+const MetricCard = ({ title, value, icon: Icon, gradient }) => {
+  return (
+    <Card className={`${gradient} border-none text-white hover:scale-105 transition-transform duration-300`}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Icon className="w-5 h-5" />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <span className="text-4xl font-bold">{value}</span>
+      </CardContent>
+    </Card>
+  );
+};
+
+// frontend/src/components/TransportMarketplace.jsx
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, Clock, MapPin, DollarSign, Phone, Car, Truck } from 'lucide-react';
+import { Card, CardContent } from './ui/card';
+import MetricCard from './MetricCard';
+
+const TransportMarketplace = () => {
+  const [metrics, setMetrics] = useState({
+    requestVolume: 0,
+    activeDrivers: 0,
+    nearbyDrivers: 0
+  });
+
+  const [availableRequests, setAvailableRequests] = useState([]);
+  const [assignedRequests, setAssignedRequests] = useState([]);
+  const [ws, setWs] = useState(null);
+
+  useEffect(() => {
+    const socket = new WebSocket('ws://localhost:3001');
+
+    socket.onopen = () => {
+      console.log('Connected to server');
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      switch (data.type) {
+        case 'initial':
+          setAvailableRequests(data.requests.filter(r => r.status === 'available'));
+          setMetrics(data.metrics);
+          break;
+
+        case 'new_request':
+          setAvailableRequests(prev => [...prev, data.request]);
+          break;
+
+        case 'metrics_update':
+          setMetrics(data.metrics);
+          break;
+
+        case 'request_assigned':
+          if (data.driverId === currentDriver?.id) {
+            const request = availableRequests.find(r => r.id === data.requestId);
+            if (request) {
+              setAssignedRequests(prev => [...prev, request]);
+              setAvailableRequests(prev => prev.filter(r => r.id !== data.requestId));
+            }
+          } else {
+            setAvailableRequests(prev => prev.filter(r => r.id !== data.requestId));
+          }
+          break;
+      }
+    };
+
+    setWs(socket);
+
+    return () => {
+      socket.close();
+    };
+  }, [availableRequests]);
+
+  const handleAssignRequest = (request) => {
+    if (ws) {
+      ws.send(JSON.stringify({
+        type: 'accept_request',
+        requestId: request.id,
+        driverId: currentDriver?.id
+      }));
+    }
+  };
+
+  const RequestCard = ({ request, isAssigned = false, onAssign }) => (
+    <Card className={`
+      gradient-border hover:scale-102 transition-all duration-300
+      ${isAssigned ? 'opacity-75' : ''}
+    `}>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <p className="text-lg font-semibold gradient-text">
+              {new Date(request.scheduledTime).toLocaleTimeString()}
+            </p>
+            <p className="text-sm text-blue-400">{request.insuranceCarrier}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {request.requiresWheelchair && (
+              <span className="bg-blue-900 text-blue-200 px-2 py-1 rounded-full flex items-center gap-1">
+                <Truck className="w-4 h-4" />
+              </span>
+            )}
+            <span className="bg-green-900 text-green-200 px-2 py-1 rounded-full">
+              ${request.payment}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-4">
+          <p className="flex items-center gap-2 text-gray-300">
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm">{request.address}</span>
+          </p>
+          <p className="flex items-center gap-2 text-gray-300">
+            <Phone className="w-4 h-4" />
+            <span className="text-sm">{request.phone}</span>
+          </p>
+          <p className="flex items-center gap-2 text-gray-300">
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-sm">{request.distance.toFixed(1)} miles away</span>
+          </p>
+        </div>
+
+        {!isAssigned && (
+          <button
+            onClick={() => onAssign(request)}
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600
+                     text-white py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed
+                     transition-all duration-300 transform hover:translate-y-[-2px]"
+          >
+            Accept Request
+          </button>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <MetricCard
+            title="Request Volume (12h)"
+            value={metrics.requestVolume}
+            icon={Clock}
+            gradient="bg-gradient-to-br from-blue-600 to-blue-700"
+          />
+          <MetricCard
+            title="Active Drivers"
+            value={metrics.activeDrivers}
+            icon={Car}
+            gradient="bg-gradient-to-br from-purple-600 to-purple-700"
+          />
+          <MetricCard
+            title="Nearby Drivers"
+            value={metrics.nearbyDrivers}
+            icon={MapPin}
+            gradient="bg-gradient-to-br from-indigo-600 to-indigo-700"
+          />
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-bold mb-4 gradient-text">Available Requests</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {availableRequests.map(request => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                onAssign={handleAssignRequest}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-bold mb-4 gradient-text">My Scheduled Trips</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {assignedRequests.map(request => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                isAssigned={true}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TransportMarketplace;
+
+// backend/package.json
+{
+  "name": "medical-transport-backend",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "uuid": "^9.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "ioredis": "^5.3.2",
+    "@faker-js/faker": "^8.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
+
+// backend/.env
+PORT=3001
+CORS_ORIGIN=http://localhost:5173
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+// backend/src/services/redis-client.js
+const Redis = require('ioredis');
+const { promisify } = require('util');
+
+class RedisClient {
+  constructor() {
+    this.client = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+    });
+
+    this.subscriber = this.client.duplicate();
+
+    this.client.on('error', err => console.error('Redis Client Error:', err));
+    this.client.on('connect', () => console.log('Redis Client Connected'));
+  }
+
+  async publish(channel, message) {
+    return await this.client.publish(channel, JSON.stringify(message));
+  }
+
+  async subscribe(channel, callback) {
+    await this.subscriber.subscribe(channel);
+    this.subscriber.on('message', (ch, message) => {
+      if (ch === channel) {
+        callback(JSON.parse(message));
+      }
+    });
+  }
+
+  async addDriver(driver) {
+    await this.client.hset(`driver:${driver.id}`, driver);
+    await this.client.sadd('active_drivers', driver.id);
+  }
+
+  async removeDriver(driverId) {
+    await this.client.srem('active_drivers', driverId);
+    await this.client.del(`driver:${driverId}`);
+  }
+
+  async getDriver(driverId) {
+    return await this.client.hgetall(`driver:${driverId}`);
+  }
+
+  async getAllDrivers() {
+    const driverIds = await this.client.smembers('active_drivers');
+    return Promise.all(driverIds.map(id => this.getDriver(id)));
+  }
+
+  async addRequest(request) {
+    await this.client.hset(`request:${request.id}`, request);
+    await this.client.sadd('active_requests', request.id);
+  }
+
+  async updateRequestStatus(requestId, status) {
+    await this.client.hset(`request:${requestId}`, 'status', status);
+  }
+
+  async getRequest(requestId) {
+    return await this.client.hgetall(`request:${requestId}`);
+  }
+
+  async getAllRequests() {
+    const requestIds = await this.client.smembers('active_requests');
+    return Promise.all(requestIds.map(id => this.getRequest(id)));
+  }
+
+  async updateMetrics(metrics) {
+    await this.client.hmset('metrics', metrics);
+  }
+
+  async getMetrics() {
+    return await this.client.hgetall('metrics');
+  }
+}
+
+module.exports = new RedisClient();
+
+// backend/src/services/data-generator.js
+const { v4: uuidv4 } = require('uuid');
+const { faker } = require('@faker-js/faker');
+const redisClient = require('./redis-client');
+
+class DataGenerator {
+  constructor() {
+    this.generateInitialData();
+    this.startGenerators();
+  }
+
+  async generateInitialData() {
+    // Generate initial pool of drivers
+    for (let i = 0; i < 20; i++) {
+      await this.generateDriver();
+    }
+
+    // Generate initial requests
+    for (let i = 0; i < 10; i++) {
+      await this.generateRequest();
+    }
+
+    await this.updateMetrics();
+  }
+
+  generateDriver() {
+    const driver = {
+      id: uuidv4(),
+      name: faker.person.fullName(),
+      vehicle: `${faker.vehicle.manufacturer()} ${faker.vehicle.model()}`,
+      photo: faker.image.avatar(),
+      wheelchairCertified: Math.random() > 0.7,
+      rating: Number((4 + Math.random()).toFixed(1)),
+      coordinates: {
+        lat: faker.location.latitude(),
+        lng: faker.location.longitude()
+      },
+      scheduledTrips: [],
+      status: 'available',
+      lastUpdated: new Date().toISOString()
+    };
+
+    return redisClient.addDriver(driver);
+  }
+
+  generateRequest() {
+    const request = {
+      id: uuidv4(),
+      scheduledTime: faker.date.soon({ days: 1 }).toISOString(),
+      distance: Number((2 + Math.random() * 8).toFixed(1)),
+      coordinates: {
+        lat: faker.location.latitude(),
+        lng: faker.location.longitude()
+      },
+      address: faker.location.streetAddress(true),
+      phone: faker.phone.number(),
+      requiresWheelchair: Math.random() > 0.7,
+      insuranceCarrier: faker.helpers.arrayElement([
+        'Medicare', 'BlueShield', 'Medicaid', 'Private'
+      ]),
+      status: 'available',
+      createdAt: new Date().toISOString()
+    };
+
+    return redisClient.addRequest(request);
+  }
+
+  async updateMetrics() {
+    const drivers = await redisClient.getAllDrivers();
+    const requests = await redisClient.getAllRequests();
+
+    const metrics = {
+      requestVolume: requests.length,
+      activeDrivers: drivers.length,
+      nearbyDrivers: Math.floor(drivers.length * 0.4) // Simplified for demo
+    };
+
+    await redisClient.updateMetrics(metrics);
+    await redisClient.publish('metrics_update', metrics);
+  }
+
+  startGenerators() {
+    // Generate new requests periodically
+    setInterval(async () => {
+      if (Math.random() > 0.7) {
+        const request = await this.generateRequest();
+        await redisClient.publish('new_request', request);
+      }
+    }, 5000);
+
+    // Update driver locations periodically
+    setInterval(async () => {
+      const drivers = await redisClient.getAllDrivers();
+      for (const driver of drivers) {
+        driver.coordinates = {
+          lat: Number(driver.coordinates.lat) + (Math.random() - 0.5) * 0.01,
+          lng: Number(driver.coordinates.lng) + (Math.random() - 0.5) * 0.01
+        };
+        await redisClient.addDriver(driver);
+      }
+    }, 10000);
+
+    // Update metrics periodically
+    setInterval(() => this.updateMetrics(), 10000);
+
+    // Clean up old requests
+    setInterval(async () => {
+      const requests = await redis

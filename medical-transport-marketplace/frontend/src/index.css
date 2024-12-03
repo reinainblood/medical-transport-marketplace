@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-gradient: linear-gradient(to right bottom, #0ea5e9, #3b82f6);
+  --card-gradient: linear-gradient(to right bottom, #1e293b, #0f172a);
+}
+
+body {
+  @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white;
+  min-height: 100vh;
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.gradient-text {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--primary-gradient);
+  padding: 1px;
+  border-radius: 0.5rem;
+}
+
+.gradient-border > * {
+  background: var(--card-gradient);
+  border-radius: 0.5rem;
+}
+
