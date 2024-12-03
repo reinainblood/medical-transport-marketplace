@@ -16,12 +16,15 @@ app.use(cors({
     methods: ['GET', 'POST'],
     credentials: true
 }));
+console.log('Starting server with Redis URL:', process.env.REDIS_URL ? 'configured' : 'not configured');
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Initialize data generator
+// debug logs
+console.log('Initializing data generator...');
 new DataGenerator();
+console.log('Data generator initialized');
 
 // WebSocket connection handling
 wss.on('connection', async (ws: WebSocket) => {
@@ -33,6 +36,7 @@ wss.on('connection', async (ws: WebSocket) => {
         requests: await redisClient.getAllRequests(),
         metrics: await redisClient.getMetrics()
     };
+    console.log('Initial Data:', initialData)
     ws.send(JSON.stringify(initialData));
 
     // Subscribe to Redis channels for real-time updates

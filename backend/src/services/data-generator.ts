@@ -6,22 +6,31 @@ import type { Driver, TransportRequest, InsuranceCarrier } from '../types';
 
 export class DataGenerator {
   constructor() {
+    console.log('Initializing DataGenerator...');
     this.generateInitialData();
     this.startGenerators();
   }
 
   private async generateInitialData(): Promise<void> {
-    // Generate initial pool of drivers
-    for (let i = 0; i < 20; i++) {
-      await this.generateDriver();
-    }
+    console.log('Generating initial data...');
+    try {
+      // Generate initial pool of drivers
+      for (let i = 0; i < 20; i++) {
+        await this.generateDriver();
+      }
+      console.log('Generated 20 drivers');
 
-    // Generate initial requests
-    for (let i = 0; i < 10; i++) {
-      await this.generateRequest();
-    }
+      // Generate initial requests
+      for (let i = 0; i < 10; i++) {
+        await this.generateRequest();
+      }
+      console.log('Generated 10 requests');
 
-    await this.updateMetrics();
+      await this.updateMetrics();
+      console.log('Initial metrics updated');
+    } catch (error) {
+      console.error('Error generating initial data:', error);
+    }
   }
 
   private async generateDriver(): Promise<void> {
